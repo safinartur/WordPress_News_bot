@@ -1,4 +1,5 @@
 services:
+  # ---------- Backend (Django) ----------
   - type: web
     name: news-backend
     env: python
@@ -12,8 +13,17 @@ services:
         value: newsportal.settings
       - key: PYTHON_VERSION
         value: 3.11
+      - key: SECRET_KEY
+        sync: false
+      - key: API_SHARED_KEY
+        sync: false
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
 
-  - type: web
+  # ---------- Frontend (React) ----------
+  - type: static
     name: news-frontend
     env: node
     buildCommand: |
@@ -25,6 +35,7 @@ services:
       - key: NODE_VERSION
         value: 20
 
+  # ---------- Telegram Bot ----------
   - type: worker
     name: news-bot
     env: python
@@ -36,6 +47,6 @@ services:
       - key: BACKEND_API_BASE
         value: https://news-backend.onrender.com/api
       - key: API_SHARED_KEY
-        value: super-secret-key
+        sync: false
       - key: MODERATOR_IDS
         value: 123456789
