@@ -1,0 +1,44 @@
+from django.db import models
+from django.utils.text import slugify
+
+class Tag(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+    slug = models.SlugField(max_length=80, unique=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+class Post(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    published = models.BooleanField(default=True)
+    cover = models.ImageField(upload_to="covers/", blank=True, null=True)
+    tags = models.ManyToManyField(Tag, related_name="posts", blank=True)
+    source_url = models.URLField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)[:40]
+            self.slug = base
+            # ensure uniqueness
+            i = 1
+            while Post.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{base}-{i}"
+                i += 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
