@@ -117,8 +117,10 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
 
         if r.ok:
             post = r.json()
-            url = f"{API_BASE.replace('/api', '')}/#/post/{post['slug']}"
+            FRONTEND_BASE = os.getenv("FRONTEND_BASE", API_BASE.replace("/api", ""))
+            url = f"{FRONTEND_BASE}/#/post/{post['slug']}"
             await update.message.reply_text(f"✅ Опубликовано успешно:\n{url}")
+
         else:
             err = r.text[:500] + "...[обрезано]" if len(r.text) > 500 else r.text
             await update.message.reply_text(f"❌ Ошибка публикации ({r.status_code}): {err}")
