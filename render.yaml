@@ -12,7 +12,7 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: newsportal.settings
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.11.9
       - key: SECRET_KEY
         sync: false
       - key: API_SHARED_KEY
