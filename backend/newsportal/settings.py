@@ -89,10 +89,14 @@ REST_FRAMEWORK = {
 API_SHARED_KEY = os.getenv("API_SHARED_KEY", "change-this-api-key")
 
 import os
+# === STATIC & MEDIA ===
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
+# === AWS / Cloudflare R2 Storage ===
 if not DEBUG:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
@@ -107,6 +111,7 @@ if not DEBUG:
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_ADDRESSING_STYLE = "virtual"
 
-    # 👇 Добавь вот эту строку!
+    # 👇 твой публичный dev-домен Cloudflare R2 (временно, пока нет custom domain)
     AWS_S3_CUSTOM_DOMAIN = "pub-bfd49b4c4d6a45f5a53468e36adc461b.r2.dev"
+
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
