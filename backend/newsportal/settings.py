@@ -108,6 +108,5 @@ if not DEBUG:
     AWS_S3_ADDRESSING_STYLE = "virtual"
 
     # 👇 Добавь вот эту строку!
-    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_ENDPOINT_URL.replace('https://', '')}"
-
+    AWS_S3_CUSTOM_DOMAIN = "pub-bfd49b4c4d6a45f5a53468e36adc461b.r2.dev"
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
