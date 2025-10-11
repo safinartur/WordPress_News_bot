@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
+from datetime import datetime
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -16,6 +18,7 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+
 class Post(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
@@ -31,13 +34,10 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base = slugify(self.title)[:40]
-            self.slug = base
-            # ensure uniqueness
-            i = 1
-            while Post.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
-                self.slug = f"{base}-{i}"
-                i += 1
+            # ✅ slug всегда уникальный и стабильный
+            base_slug = slugify(self.title)[:40] or "post"
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            self.slug = f"{base_slug}-{timestamp}"
         super().save(*args, **kwargs)
 
     def __str__(self):
