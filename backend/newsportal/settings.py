@@ -114,4 +114,6 @@ if not DEBUG:
     # 👇 твой публичный dev-домен Cloudflare R2 (временно, пока нет custom domain)
     AWS_S3_CUSTOM_DOMAIN = "pub-bfd49b4c4d6a45f5a53468e36adc461b.r2.dev"
 
+    AWS_S3_OBJECT_PARAMETERS = {"ACL": "public-read"}
+
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
