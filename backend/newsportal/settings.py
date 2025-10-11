@@ -90,6 +90,7 @@ API_SHARED_KEY = os.getenv("API_SHARED_KEY", "change-this-api-key")
 
 import os
 # === STATIC & MEDIA ===
+# === STATIC & MEDIA ===
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -97,26 +98,33 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # === AWS / Cloudflare R2 Storage ===
-if not DEBUG:
+if os.getenv("USE_R2", "1") == "1" or not DEBUG:
+    print("📦 Using Cloudflare R2 for media storage")
+
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", None)
     AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = False
-    AWS_S3_ADDRESSING_STYLE = "virtual"
+    AWS_S3_ADDRESSING_STYLE = "path"
 
-    # 👇 твой публичный dev-домен Cloudflare R2 (временно, пока нет custom domain)
-    AWS_S3_CUSTOM_DOMAIN = "pub-bfd49b4c4d6a45f5a53468e36adc461b.r2.dev"
-
+    # Сделаем файлы публичными
     AWS_S3_OBJECT_PARAMETERS = {
         "ACL": "public-read",
         "CacheControl": "max-age=86400",
     }
 
+    AWS_S3_CUSTOM_DOMAIN = os.getenv(
+        "AWS_S3_CUSTOM_DOMAIN",
+        "pub-bfd49b4c4d6a45f5a53468e36adc461b.r2.dev"
+    )
+
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+else:
+    print("💾 Using local FileSystemStorage for media")
