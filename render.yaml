@@ -22,10 +22,10 @@ services:
       - key: ALLOWED_HOSTS
         value: "*"
 
-  # ---------- Frontend (React) ----------
-  - type: static
+  # ---------- Frontend (React / Vite build → static hosting) ----------
+  - type: web
     name: news-frontend
-    env: node
+    env: static
     buildCommand: |
       cd frontend
       npm install
