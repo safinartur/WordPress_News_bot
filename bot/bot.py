@@ -19,8 +19,22 @@ from telegram.ext import (
 )
 from telegram.error import Conflict, NetworkError, TimedOut
 
+
+
 # === Загрузка переменных окружения ===
 load_dotenv()
+
+import fcntl
+import sys
+
+lock_file = "/tmp/bot.lock"
+
+try:
+    lock_fd = open(lock_file, "w")
+    fcntl.lockf(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except IOError:
+    print("🚫 Другой экземпляр бота уже запущен. Завершение.")
+    sys.exit(0)
 
 API_BASE = os.getenv("BACKEND_API_BASE", "http://127.0.0.1:8000/api")
 API_KEY = os.getenv("API_SHARED_KEY")
