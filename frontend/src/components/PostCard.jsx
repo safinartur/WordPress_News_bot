@@ -17,6 +17,7 @@ export default function PostCard({ post }) {
       }}
       className="post-card"
     >
+      {/* Картинка слева */}
       {post.cover && (
         <Link to={`/post/${post.slug}`}>
           <img
@@ -32,28 +33,32 @@ export default function PostCard({ post }) {
         </Link>
       )}
 
+      {/* Текст справа */}
       <div style={{ flex: 1 }}>
+        {/* Теги */}
         <div style={{ marginBottom: 8 }}>
-          {post.tags?.map((t) => (
-            <Link
-              key={t.slug}
-              to={`/tag/${t.slug}`}
-              style={{
-                display: 'inline-block',
-                background: '#f4f6f8',
-                color: '#333',
-                padding: '3px 10px',
-                borderRadius: '20px',
-                fontSize: 12,
-                textDecoration: 'none',
-                marginRight: 6,
-              }}
-            >
-              {t.name}
-            </Link>
-          ))}
+          {post.tags?.length > 0 &&
+            post.tags.map((t) => (
+              <Link
+                key={t.slug}
+                to={`/tag/${t.slug}`}
+                style={{
+                  display: 'inline-block',
+                  background: '#f4f6f8',
+                  color: '#333',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  marginRight: 6,
+                }}
+              >
+                {t.name}
+              </Link>
+            ))}
         </div>
 
+        {/* Заголовок */}
         <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem' }}>
           <Link
             to={`/post/${post.slug}`}
@@ -67,6 +72,7 @@ export default function PostCard({ post }) {
           </Link>
         </h3>
 
+        {/* Краткий текст с защитой от undefined */}
         <p
           style={{
             color: '#555',
@@ -75,9 +81,12 @@ export default function PostCard({ post }) {
             lineHeight: 1.5,
           }}
         >
-          {post.body.slice(0, 180).replace(/\n/g, ' ')}…
+          {(post.body ?? '')
+            .slice(0, 180)
+            .replace(/\n/g, ' ') || 'Читать далее…'}
         </p>
 
+        {/* Дата */}
         <p style={{ color: '#999', fontSize: 12, marginTop: 6 }}>
           {new Date(post.created_at).toLocaleString('ru-RU')}
         </p>
