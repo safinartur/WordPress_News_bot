@@ -252,17 +252,18 @@ def build_app():
     app = Application.builder().token(TOKEN).build()
 
     conv_new = ConversationHandler(
-        entry_points=[CommandHandler("new", start)],
-        states={
-            TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_title)],
-            BODY: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_body)],
-            TAGS: [CallbackQueryHandler(select_tag)],       # 🟢 добавлено
-            IMAGE: [
-                CommandHandler("skip", skip_image),
-                MessageHandler(filters.PHOTO, got_image),
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
+    entry_points=[CommandHandler("new", start)],
+    states={
+        TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_title)],
+        BODY: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_body)],
+        TAGS: [CallbackQueryHandler(select_tag)],
+        IMAGE: [
+            CommandHandler("skip", skip_image),
+            MessageHandler(filters.PHOTO, got_image),
+        ],
+    },
+    fallbacks=[CommandHandler("cancel", cancel)],
+    per_message=True,     # ✅ теперь inline-кнопки отслеживаются всегда
     )
 
     app.add_handler(CommandHandler("start", start))
