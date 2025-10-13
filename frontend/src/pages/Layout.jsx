@@ -1,35 +1,64 @@
-import React from "react"
-import { Link } from "react-router-dom"
-import "../Padua.css"
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 export default function Layout({ children }) {
   return (
-    <>
-      <header>
-        <h1 style={{ margin: 0, fontFamily: "Merriweather, serif" }}>
-          <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-            Padova News
-          </Link>
-        </h1>
-        <nav>
-          <Link to="/">Главная</Link>
-          <Link to="/tag/cultura">Культура</Link>
-          <Link to="/tag/sport">Спорт</Link>
-          <Link to="/tag/politica">Политика</Link>
-          <a href="https://t.me/" target="_blank" rel="noreferrer">
-            Telegram
-          </a>
-        </nav>
+    <div
+      style={{
+        fontFamily: 'Lato, sans-serif',
+        backgroundColor: '#fff',
+        color: '#222',
+        minHeight: '100vh',
+      }}
+    >
+      <header
+        style={{
+          backgroundColor: '#f8fafc',
+          padding: '16px 24px',
+          borderBottom: '1px solid #eee',
+          marginBottom: 20,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 900,
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h1 style={{ margin: 0 }}>
+            <Link to="/" style={{ color: '#000', textDecoration: 'none' }}>
+              Новости Падуи
+            </Link>
+          </h1>
+          <nav>
+            <a
+              href="https://t.me/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: '#ed7070', textDecoration: 'none' }}
+            >
+              Мы в Telegram
+            </a>
+          </nav>
+        </div>
       </header>
 
-      <main>{children}</main>
+      <main style={{ maxWidth: 900, margin: '0 auto' }}>{children}</main>
 
-      <footer>
-        © {new Date().getFullYear()} Padova News — новости города Падуя |
-        <a href="https://t.me/" style={{ color: "#2a5f8b", marginLeft: 6 }}>
-          наш Telegram
-        </a>
+      <footer
+        style={{
+          textAlign: 'center',
+          marginTop: 40,
+          padding: 20,
+          borderTop: '1px solid #eee',
+          color: '#999',
+        }}
+      >
+        © {new Date().getFullYear()} Падуя Инфо
       </footer>
-    </>
+    </div>
   )
 }
