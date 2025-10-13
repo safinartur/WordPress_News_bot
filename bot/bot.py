@@ -19,6 +19,7 @@ from telegram.ext import (
 )
 from telegram.error import Conflict, NetworkError, TimedOut
 
+import asyncio
 
 
 # === Загрузка переменных окружения ===
@@ -108,6 +109,7 @@ async def select_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tag = query.data
     await query.answer()
 
+    # Если пользователь нажал "Продолжить"
     if tag == "done":
         if not context.user_data.get("tag_slugs"):
             context.user_data["tag_slugs"] = DEFAULT_TAGS
@@ -116,26 +118,25 @@ async def select_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return IMAGE
 
-    # Добавляем тег
+    # Добавляем тег в список
     tags = context.user_data.get("tag_slugs", [])
     if tag not in tags:
         tags.append(tag)
     context.user_data["tag_slugs"] = tags
 
-    # Показываем выбранные теги, но не сбрасываем клавиатуру
+    # Обновляем сообщение (только текст + клавиатуру)
     selected = ", ".join(tags) or "нет"
     buttons = [
         [InlineKeyboardButton(label, callback_data=slug)] for slug, label in MAIN_TAGS
     ]
     buttons.append([InlineKeyboardButton("✅ Продолжить", callback_data="done")])
 
-    await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(buttons))
-    await query.edit_message_caption(
-        caption=f"✅ Вы выбрали: {selected}\n(можно добавить ещё или нажать ✅ Продолжить)"
+    await query.edit_message_text(
+        text=f"✅ Вы выбрали: {selected}\n\nМожно выбрать ещё или нажать ✅ Продолжить.",
+        reply_markup=InlineKeyboardMarkup(buttons),
     )
 
     return TAGS
-
 
 
 # === Пропуск фото ===
@@ -162,7 +163,7 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
     print("📤 Публикация новости...")
 
     try:
-        # проверяем backend
+        # Проверяем backend с 3 попытками
         ping_url = f"{API_BASE}/posts/?page=1"
         print(f"🌐 Проверяю backend: {ping_url}")
 
@@ -180,27 +181,38 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
                 print(f"🟥 Попытка {attempt+1}: {e}")
             if attempt < 2:
                 await update.message.reply_text("💤 Backend просыпается... подожди немного...")
-                time.sleep(5)
+                await asyncio.sleep(5)
 
         if not backend_ready:
             await update.message.reply_text("🟥 Backend не ответил после 3 попыток. Попробуй чуть позже.")
             return
 
-        # формируем данные
+        # --- Формируем данные для публикации ---
+        tag_slugs = context.user_data.get("tag_slugs", [])
+        if not tag_slugs:
+            tag_slugs = DEFAULT_TAGS or []
+
         data = {
             "title": context.user_data.get("title", "(без названия)"),
             "body": context.user_data.get("body", "(без текста)"),
-            "tag_slugs": context.user_data.get("tag_slugs", DEFAULT_TAGS),
+            "tag_slugs": tag_slugs,
         }
+
+        print(f"🧩 DEBUG: context.user_data = {context.user_data}")
+        print(f"➡️ Отправляю POST {API_BASE}/posts/")
+        print(f"📦 Данные: {data}")
+
         files = {"cover": open(photo_file, "rb")} if photo_file else None
         headers = {"X-API-KEY": API_KEY}
-        
-        print(f"➡️ POST {API_BASE}/posts/ | Теги: {data['tag_slugs']}")
+
+        # --- Отправляем POST запрос ---
         r = requests.post(f"{API_BASE}/posts/", data=data, files=files, headers=headers, timeout=(10, 30))
+
         if files:
             files["cover"].close()
 
         print(f"⬅️ Ответ backend: {r.status_code}")
+        print(f"📥 Тело ответа: {r.text[:500]}")
 
         if r.ok:
             post = r.json()
@@ -210,12 +222,16 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
         else:
             await update.message.reply_text(f"❌ Ошибка публикации ({r.status_code}): {r.text[:300]}")
 
+    except requests.exceptions.Timeout:
+        print("⏱️ Таймаут запроса к backend")
+        await update.message.reply_text("⚠️ Сервер не ответил вовремя (таймаут).")
+
     except Exception as e:
         print(f"💥 Ошибка publish(): {e}")
         await update.message.reply_text(f"💥 Ошибка публикации: {e}")
+
     finally:
         print("✅ publish() завершена.")
-
 
 # === /delete ===
 async def delete_post(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Post, Tag
-
+from django.utils.text import slugify
 import json
 
 
@@ -48,31 +48,57 @@ class PostListCreateView(View):
         if not authorized(request):
             return HttpResponseForbidden("Invalid API key")
 
-        title = request.POST.get("title", "(без названия)")
-        body = request.POST.get("body", "")
-        tag_slugs = request.POST.getlist("tag_slugs", [])
+        print("🟢 POST /api/posts/ получен")
+        print("📥 request.POST:", request.POST)
+        print("📦 request.FILES:", request.FILES)
+
+        # Пробуем прочитать JSON, если данные не пришли как форма
+        if not request.POST and request.body:
+            try:
+                data = json.loads(request.body.decode("utf-8"))
+            except Exception:
+                data = {}
+        else:
+            data = request.POST
+
+        title = data.get("title", "(без названия)")
+        body = data.get("body", "")
+        tag_slugs = data.getlist("tag_slugs") if hasattr(data, "getlist") else data.get("tag_slugs", [])
+
+        # Приводим теги к списку
+        if isinstance(tag_slugs, str):
+            tag_slugs = [tag_slugs]
+        tag_slugs = [t.strip().lower() for t in tag_slugs if t.strip()]
+
+        print(f"🏷 Полученные теги: {tag_slugs}")
 
         post = Post.objects.create(title=title, body=body, published=True)
 
         # добавляем теги
         if tag_slugs:
-            from django.utils.text import slugify
             tags = []
             for raw in tag_slugs:
-                raw = raw.strip()
-                if not raw:
-                    continue
                 slug = slugify(raw)[:60]
-                tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"name": raw})
+                tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"name": raw.title()})
                 tags.append(tag)
             post.tags.set(tags)
+            print(f"✅ Установлены теги: {[t.slug for t in tags]}")
+        else:
+            print("⚠️ Теги отсутствуют — пропущено")
 
         # добавляем обложку
         if "cover" in request.FILES:
             post.cover = request.FILES["cover"]
             post.save()
+            print(f"🖼 Добавлено изображение: {post.cover.name}")
 
-        return JsonResponse({"slug": post.slug}, status=201)
+        return JsonResponse(
+            {
+                "slug": post.slug,
+                "tags": list(post.tags.values_list("slug", flat=True)),
+            },
+            status=201,
+        )
 
     def http_method_not_allowed(self, request, *args, **kwargs):
         return HttpResponseNotAllowed(["GET", "POST"])
@@ -109,6 +135,11 @@ class PostRetrieveDeleteView(View):
             p = Post.objects.get(slug=slug)
         except Post.DoesNotExist:
             return HttpResponseNotFound("Not found")
+
+        print(f"🗑 Удаляем пост {slug}")
+        if p.cover:
+            print(f"🧹 Удаляем обложку: {p.cover.name}")
+            p.cover.delete(save=False)
 
         p.delete()
         return JsonResponse({"deleted": slug}, status=200)
