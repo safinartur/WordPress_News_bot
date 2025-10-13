@@ -79,23 +79,30 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
     print("📤 Публикация новости...")
 
     try:
-        # 1️⃣ Проверяем backend
+        # 1️⃣ Проверяем backend с несколькими попытками (для Render)
         ping_url = f"{API_BASE}/posts/?page=1"
         print(f"🌐 Проверяю backend: {ping_url}")
-        try:
-            ping_start = time.time()
-            ping_resp = requests.get(ping_url, timeout=10)
-            ping_time = round(time.time() - ping_start, 2)
-            if not ping_resp.ok:
-                print(f"⚠️ Backend вернул {ping_resp.status_code}")
-                await update.message.reply_text(
-                    f"⚠️ Backend ответил ошибкой ({ping_resp.status_code}). Попробуй ещё раз позже."
-                )
-                return
-            print(f"✅ Backend отвечает за {ping_time}s")
-        except requests.exceptions.RequestException as e:
-            print(f"🟥 Backend недоступен: {e}")
-            await update.message.reply_text("🟥 Backend сейчас спит или недоступен. Попробуй через 30 секунд.")
+
+        backend_ready = False
+        for attempt in range(3):
+            try:
+                ping_start = time.time()
+                resp = requests.get(ping_url, timeout=10)
+                ping_time = round(time.time() - ping_start, 2)
+                if resp.ok:
+                    print(f"✅ Backend отвечает за {ping_time}s (попытка {attempt+1})")
+                    backend_ready = True
+                    break
+                else:
+                    print(f"⚠️ Backend вернул {resp.status_code}, попытка {attempt+1}")
+            except requests.exceptions.RequestException as e:
+                print(f"🟥 Попытка {attempt+1}: {e}")
+            if attempt < 2:
+                await update.message.reply_text("💤 Backend просыпается... подожди немного...")
+                time.sleep(5)
+
+        if not backend_ready:
+            await update.message.reply_text("🟥 Backend не ответил после 3 попыток. Попробуй чуть позже.")
             return
 
         # 2️⃣ Отправляем POST
@@ -120,7 +127,6 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
             FRONTEND_BASE = os.getenv("FRONTEND_BASE", API_BASE.replace("/api", ""))
             url = f"{FRONTEND_BASE}/#/post/{post['slug']}"
             await update.message.reply_text(f"✅ Опубликовано успешно:\n{url}")
-
         else:
             err = r.text[:500] + "...[обрезано]" if len(r.text) > 500 else r.text
             await update.message.reply_text(f"❌ Ошибка публикации ({r.status_code}): {err}")
