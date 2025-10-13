@@ -105,8 +105,8 @@ async def got_body(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === Обработка нажатий на кнопки тегов ===
 async def select_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     tag = query.data
+    await query.answer()
 
     if tag == "done":
         if not context.user_data.get("tag_slugs"):
@@ -116,21 +116,26 @@ async def select_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return IMAGE
 
-    # добавляем тег, если его нет
+    # Добавляем тег
     tags = context.user_data.get("tag_slugs", [])
     if tag not in tags:
         tags.append(tag)
     context.user_data["tag_slugs"] = tags
 
-    selected = ", ".join(tags)
-    await query.edit_message_text(
-        f"✅ Вы выбрали: {selected}\n\nМожно выбрать ещё или нажать ✅ Продолжить.",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton(label, callback_data=slug)] for slug, label in MAIN_TAGS]
-            + [[InlineKeyboardButton("✅ Продолжить", callback_data="done")]]
-        ),
+    # Показываем выбранные теги, но не сбрасываем клавиатуру
+    selected = ", ".join(tags) or "нет"
+    buttons = [
+        [InlineKeyboardButton(label, callback_data=slug)] for slug, label in MAIN_TAGS
+    ]
+    buttons.append([InlineKeyboardButton("✅ Продолжить", callback_data="done")])
+
+    await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(
+        caption=f"✅ Вы выбрали: {selected}\n(можно добавить ещё или нажать ✅ Продолжить)"
     )
+
     return TAGS
+
 
 
 # === Пропуск фото ===
@@ -189,7 +194,7 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
         }
         files = {"cover": open(photo_file, "rb")} if photo_file else None
         headers = {"X-API-KEY": API_KEY}
-
+        
         print(f"➡️ POST {API_BASE}/posts/ | Теги: {data['tag_slugs']}")
         r = requests.post(f"{API_BASE}/posts/", data=data, files=files, headers=headers, timeout=(10, 30))
         if files:
