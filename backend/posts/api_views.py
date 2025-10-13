@@ -36,12 +36,14 @@ class PostListCreateView(View):
             {
                 "title": p.title,
                 "slug": p.slug,
+                "body": p.body or "",  # ✅ теперь тело новости включено
                 "cover": p.cover.url if p.cover else None,
                 "tags": list(p.tags.values_list("slug", flat=True)),
                 "created_at": p.created_at.isoformat(),
             }
             for p in qs[start:end]
         ]
+
         return JsonResponse({"count": qs.count(), "results": results}, status=200)
 
     def post(self, request):
