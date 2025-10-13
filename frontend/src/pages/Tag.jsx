@@ -18,7 +18,9 @@ export default function Tag() {
         const r = await fetch(`${API}/posts/?tag=${slug}`)
         const data = await r.json()
         setPosts(data.results || [])
-        setTagName(slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
+        setTagName(
+          slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+        )
       } catch (err) {
         console.error('Ошибка загрузки тегов:', err)
       } finally {
@@ -33,11 +35,13 @@ export default function Tag() {
     <Layout>
       <div
         style={{
-          background: '#f8fafc',
+          background: '#fff',
+          border: '1px solid #ddd',
           borderRadius: 10,
           padding: '24px 20px',
           marginBottom: 30,
           textAlign: 'center',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
         }}
       >
         <h2
@@ -45,12 +49,12 @@ export default function Tag() {
             fontSize: '1.6rem',
             fontWeight: 700,
             margin: 0,
-            color: '#1e293b',
+            color: '#000',
           }}
         >
           🏷 Тег: {tagName}
         </h2>
-        <p style={{ color: '#64748b', marginTop: 6 }}>
+        <p style={{ color: '#555', marginTop: 6 }}>
           {posts.length
             ? `Найдено ${posts.length} новостей`
             : 'Пока нет новостей в этой категории'}
@@ -58,7 +62,7 @@ export default function Tag() {
       </div>
 
       {posts.map((p) => (
-        <PostCard key={p.id} post={p} />
+        <PostCard key={p.slug} post={p} />
       ))}
 
       {posts.length === 0 && (

@@ -36,26 +36,35 @@ export default function PostCard({ post }) {
       {/* Текст справа */}
       <div style={{ flex: 1 }}>
         {/* Теги */}
-        <div style={{ marginBottom: 8 }}>
-          {post.tags?.length > 0 &&
-            post.tags.map((t) => (
-              <Link
-                key={t.slug}
-                to={`/tag/${t.slug}`}
-                style={{
-                  display: 'inline-block',
-                  background: '#f4f6f8',
-                  color: '#333',
-                  padding: '3px 10px',
-                  borderRadius: '20px',
-                  fontSize: 12,
-                  textDecoration: 'none',
-                  marginRight: 6,
-                }}
-              >
-                {t.name}
-              </Link>
-            ))}
+        <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {post.tags?.length > 0 ? (
+            post.tags.map((t, i) => {
+              const tagSlug = typeof t === 'string' ? t : t.slug
+              const tagName = typeof t === 'string' ? t.replace(/-/g, ' ') : t.name
+              return (
+                <Link
+                  key={i}
+                  to={`/tag/${tagSlug}`}
+                  style={{
+                    display: 'inline-block',
+                    border: '1px solid #000',
+                    color: '#000',
+                    padding: '2px 10px',
+                    borderRadius: '14px',
+                    fontSize: 12,
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                    background: '#fff',
+                  }}
+                >
+                  {tagName}
+                </Link>
+              )
+            })
+          ) : (
+            <span style={{ fontSize: 12, color: '#999' }}>без тегов</span>
+          )}
         </div>
 
         {/* Заголовок */}
@@ -66,13 +75,14 @@ export default function PostCard({ post }) {
               color: '#000',
               textDecoration: 'none',
               fontWeight: 700,
+              lineHeight: 1.4,
             }}
           >
             {post.title}
           </Link>
         </h3>
 
-        {/* Краткий текст с защитой от undefined */}
+        {/* Краткий текст */}
         <p
           style={{
             color: '#555',
@@ -81,9 +91,8 @@ export default function PostCard({ post }) {
             lineHeight: 1.5,
           }}
         >
-          {(post.body ?? '')
-            .slice(0, 180)
-            .replace(/\n/g, ' ') || 'Читать далее…'}
+          {(post.body ?? '').slice(0, 180).replace(/\n/g, ' ') ||
+            'Читать далее…'}
         </p>
 
         {/* Дата */}

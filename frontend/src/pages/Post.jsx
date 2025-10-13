@@ -12,18 +12,23 @@ export default function Post() {
 
   useEffect(() => {
     (async () => {
-      const r = await fetch(`${API}/posts/${slug}/`)
-      const data = await r.json()
-      setPost(data)
+      try {
+        const r = await fetch(`${API}/posts/${slug}/`)
+        const data = await r.json()
+        setPost(data)
 
-      // 🧩 Загружаем похожие посты по тегу
-      if (data.tags?.length > 0) {
-        const firstTag = data.tags[0].slug
-        const rel = await fetch(`${API}/posts/?tag=${firstTag}`)
-        const relData = await rel.json()
-        // исключаем сам пост
-        const filtered = relData.results.filter((p) => p.slug !== slug)
-        setRelated(filtered.slice(0, 3))
+        // 🧩 Загружаем похожие посты по тегу
+        if (data.tags?.length > 0) {
+          const firstTag =
+            typeof data.tags[0] === 'string' ? data.tags[0] : data.tags[0].slug
+          const rel = await fetch(`${API}/posts/?tag=${firstTag}`)
+          const relData = await rel.json()
+          // исключаем сам пост
+          const filtered = relData.results.filter((p) => p.slug !== slug)
+          setRelated(filtered.slice(0, 3))
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки поста:', err)
       }
     })()
   }, [slug])
@@ -37,46 +42,65 @@ export default function Post() {
           background: '#fff',
           borderRadius: 10,
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          padding: '24px',
+          padding: '28px 24px',
           marginBottom: 40,
+          maxWidth: 860,
+          marginInline: 'auto',
         }}
       >
-        <div style={{ marginBottom: 12 }}>
-          {post.tags?.map((t) => (
-            <Link
-              key={t.slug}
-              to={`/tag/${t.slug}`}
-              style={{
-                display: 'inline-block',
-                background: '#f4f6f8',
-                color: '#333',
-                padding: '3px 10px',
-                borderRadius: '20px',
-                fontSize: 12,
-                textDecoration: 'none',
-                marginRight: 6,
-              }}
-            >
-              {t.name}
-            </Link>
-          ))}
+        {/* Теги */}
+        <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {post.tags?.length > 0 ? (
+            post.tags.map((t, i) => {
+              const tagSlug = typeof t === 'string' ? t : t.slug
+              const tagName =
+                typeof t === 'string'
+                  ? t.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                  : t.name
+              return (
+                <Link
+                  key={i}
+                  to={`/tag/${tagSlug}`}
+                  style={{
+                    border: '1px solid #000',
+                    color: '#000',
+                    padding: '2px 10px',
+                    borderRadius: '14px',
+                    fontSize: 12,
+                    textDecoration: 'none',
+                    background: '#fff',
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {tagName}
+                </Link>
+              )
+            })
+          ) : (
+            <span style={{ fontSize: 12, color: '#999' }}>без тегов</span>
+          )}
         </div>
 
+        {/* Заголовок */}
         <h1
           style={{
-            fontSize: '1.8rem',
+            fontSize: '1.9rem',
             marginBottom: 10,
             lineHeight: 1.3,
             color: '#111',
+            fontWeight: 800,
           }}
         >
           {post.title}
         </h1>
 
-        <p style={{ color: '#999', fontSize: 13, marginTop: 0 }}>
+        {/* Дата */}
+        <p style={{ color: '#777', fontSize: 13, marginTop: 0, marginBottom: 16 }}>
           {new Date(post.created_at).toLocaleString('ru-RU')}
         </p>
 
+        {/* Обложка */}
         {post.cover && (
           <img
             src={post.cover}
@@ -85,16 +109,18 @@ export default function Post() {
               width: '100%',
               borderRadius: 8,
               margin: '20px 0',
-              maxHeight: 420,
+              maxHeight: 460,
               objectFit: 'cover',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
             }}
           />
         )}
 
+        {/* Текст */}
         <div
           style={{
-            fontSize: 16,
-            lineHeight: 1.7,
+            fontSize: 17,
+            lineHeight: 1.75,
             color: '#333',
             whiteSpace: 'pre-line',
           }}
@@ -104,17 +130,29 @@ export default function Post() {
         />
       </article>
 
+      {/* Похожие новости */}
       {related.length > 0 && (
         <section
           style={{
             background: '#f8fafc',
             borderRadius: 10,
-            padding: '20px',
+            padding: '24px 20px',
+            maxWidth: 880,
+            marginInline: 'auto',
           }}
         >
-          <h2 style={{ fontSize: '1.3rem', marginBottom: 16 }}>Похожие новости</h2>
+          <h2
+            style={{
+              fontSize: '1.3rem',
+              marginBottom: 16,
+              fontWeight: 700,
+              color: '#111',
+            }}
+          >
+            Похожие новости
+          </h2>
           {related.map((p) => (
-            <PostCard key={p.id} post={p} />
+            <PostCard key={p.slug} post={p} />
           ))}
         </section>
       )}
