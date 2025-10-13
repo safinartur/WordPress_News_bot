@@ -1,6 +1,9 @@
+import io
+import json
+from datetime import datetime
 from django.db import models
 from django.utils.text import slugify
-from datetime import datetime
+from django.core.files.storage import default_storage
 
 
 class Tag(models.Model):
@@ -33,12 +36,56 @@ class Post(models.Model):
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
+        """
+        Сохраняет пост с уникальным slug и делает JSON-бэкап в S3 / локально.
+        """
         if not self.slug:
-            # ✅ slug всегда уникальный и стабильный
-            base_slug = slugify(self.title)[:40] or "post"
+            base = slugify(self.title)[:60] or "post"
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            self.slug = f"{base_slug}-{timestamp}"
+            slug = f"{base}-{timestamp}"
+
+            # если slug уже существует — добавляем счётчик
+            counter = 1
+            while Post.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                counter += 1
+                slug = f"{base}-{timestamp}-{counter}"
+
+            self.slug = slug
+
         super().save(*args, **kwargs)
+
+        # --- JSON-бэкап ---
+        try:
+            data = {
+                "title": self.title,
+                "slug": self.slug,
+                "body": self.body,
+                "created_at": self.created_at.isoformat(),
+                "published": self.published,
+                "tags": list(self.tags.values_list("slug", flat=True)),
+                "cover": self.cover.url if self.cover else None,
+                "source_url": self.source_url,
+            }
+
+            buffer = io.BytesIO(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
+            path = f"posts/{self.slug}.json"
+            # перезапишет, если уже существует (благодаря FILE_OVERWRITE=False)
+            default_storage.save(path, buffer)
+        except Exception as e:
+            print(f"⚠️ Не удалось сделать JSON-бэкап: {e}")
+
+    def delete(self, *args, **kwargs):
+        """
+        Удаляет JSON-бэкап при удалении поста.
+        """
+        try:
+            path = f"posts/{self.slug}.json"
+            if default_storage.exists(path):
+                default_storage.delete(path)
+        except Exception as e:
+            print(f"⚠️ Не удалось удалить JSON-бэкап: {e}")
+
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.title
