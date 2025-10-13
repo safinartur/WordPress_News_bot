@@ -1,15 +1,35 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react"
+import { Link } from "react-router-dom"
+import "../Padua.css"
 
-export default function Layout({children}){
+export default function Layout({ children }) {
   return (
-    <div style={{maxWidth:900, margin:'0 auto', padding:16}}>
-      <header style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
-        <h1 style={{margin:0}}><Link to="/">Новости</Link></h1>
-        <nav><a href="https://t.me/" target="_blank" rel="noreferrer">Мы в Telegram</a></nav>
+    <>
+      <header>
+        <h1 style={{ margin: 0, fontFamily: "Merriweather, serif" }}>
+          <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+            Padova News
+          </Link>
+        </h1>
+        <nav>
+          <Link to="/">Главная</Link>
+          <Link to="/tag/cultura">Культура</Link>
+          <Link to="/tag/sport">Спорт</Link>
+          <Link to="/tag/politica">Политика</Link>
+          <a href="https://t.me/" target="_blank" rel="noreferrer">
+            Telegram
+          </a>
+        </nav>
       </header>
-      {children}
-      <footer style={{marginTop:40, opacity:0.7}}>© {new Date().getFullYear()}</footer>
-    </div>
+
+      <main>{children}</main>
+
+      <footer>
+        © {new Date().getFullYear()} Padova News — новости города Падуя |
+        <a href="https://t.me/" style={{ color: "#2a5f8b", marginLeft: 6 }}>
+          наш Telegram
+        </a>
+      </footer>
+    </>
   )
 }
