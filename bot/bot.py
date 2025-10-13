@@ -85,7 +85,7 @@ async def got_body(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(buttons),
     )
     context.user_data["tag_slugs"] = []
-    return TAGS
+    return TAGS     # ← ОБЯЗАТЕЛЬНО это состояние
 
 
 # === Обработка нажатий на кнопки тегов ===
@@ -256,7 +256,7 @@ def build_app():
         states={
             TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_title)],
             BODY: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_body)],
-            TAGS: [CallbackQueryHandler(select_tag)],
+            TAGS: [CallbackQueryHandler(select_tag)],       # 🟢 добавлено
             IMAGE: [
                 CommandHandler("skip", skip_image),
                 MessageHandler(filters.PHOTO, got_image),
