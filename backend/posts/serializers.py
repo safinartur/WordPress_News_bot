@@ -8,53 +8,28 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ["id", "name", "slug"]
 
-
 class PostSerializer(serializers.ModelSerializer):
-    # Теги для чтения (возвращаются на фронтенд)
     tags = TagSerializer(many=True, read_only=True)
-
-    # Теги для записи (принимаются от бота как список slug’ов)
-    tag_slugs = serializers.ListField(
-        child=serializers.CharField(),
-        write_only=True,
-        required=False,
-        help_text="Список тегов (slug) для привязки к посту",
-    )
+    tag_slugs = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     class Meta:
         model = Post
-        fields = [
-            "id",
-            "title",
-            "slug",
-            "body",
-            "created_at",
-            "published",
-            "cover",
-            "tags",
-            "tag_slugs",
-            "source_url",
-        ]
+        fields = ["id", "title", "slug", "body", "created_at", "published", "cover", "tags", "tag_slugs", "source_url"]
 
     def create(self, validated_data):
-        """
-        При создании поста принимает список slug-тегов.
-        Если тег отсутствует — создаёт автоматически.
-        """
         tag_slugs = validated_data.pop("tag_slugs", [])
         post = Post.objects.create(**validated_data)
-
         if tag_slugs:
             tags = []
-            for raw in tag_slugs:
-                raw = raw.strip()
-                if not raw:
+            from .models import Tag
+            for slug in tag_slugs:
+                slug = slug.strip().lower()
+                if not slug:
                     continue
-                # генерируем slug корректно
-                slug = slugify(raw)[:60]
-                name = raw.replace("-", " ").title()
-                tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"name": name})
+                tag, _ = Tag.objects.get_or_create(
+                    slug=slug,
+                    defaults={"name": slug.replace("-", " ").title()},
+                )
                 tags.append(tag)
             post.tags.set(tags)
-
         return post
