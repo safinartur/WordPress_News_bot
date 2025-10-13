@@ -1,6 +1,16 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+// ✅ Словарь для перевода slug → кириллица
+const TAG_TRANSLATIONS = {
+  novosti: 'Новости',
+  obshchestvo: 'Общество',
+  politika: 'Политика',
+  ekonomika: 'Экономика',
+  transport: 'Транспорт',
+  ekologiia: 'Экология',
+}
+
 export default function PostCard({ post }) {
   return (
     <article
@@ -13,7 +23,6 @@ export default function PostCard({ post }) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         padding: '16px',
         marginBottom: '20px',
-        transition: 'transform 0.2s ease',
       }}
       className="post-card"
     >
@@ -36,35 +45,34 @@ export default function PostCard({ post }) {
       {/* Текст справа */}
       <div style={{ flex: 1 }}>
         {/* Теги */}
-        <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {post.tags?.length > 0 ? (
+        <div style={{ marginBottom: 8 }}>
+          {post.tags?.length > 0 &&
             post.tags.map((t, i) => {
-              const tagSlug = typeof t === 'string' ? t : t.slug
-              const tagName = typeof t === 'string' ? t.replace(/-/g, ' ') : t.name
+              const slug = typeof t === 'string' ? t : t.slug
+              const displayName =
+                typeof t === 'string'
+                  ? TAG_TRANSLATIONS[t] || t
+                  : TAG_TRANSLATIONS[t.slug] || t.name || t.slug
               return (
                 <Link
                   key={i}
-                  to={`/tag/${tagSlug}`}
+                  to={`/tag/${slug}`}
                   style={{
                     display: 'inline-block',
                     border: '1px solid #000',
                     color: '#000',
                     padding: '2px 10px',
-                    borderRadius: '14px',
+                    borderRadius: '16px',
                     fontSize: 12,
                     textDecoration: 'none',
-                    fontWeight: 500,
-                    textTransform: 'capitalize',
+                    marginRight: 6,
                     background: '#fff',
                   }}
                 >
-                  {tagName}
+                  {displayName}
                 </Link>
               )
-            })
-          ) : (
-            <span style={{ fontSize: 12, color: '#999' }}>без тегов</span>
-          )}
+            })}
         </div>
 
         {/* Заголовок */}
@@ -75,7 +83,6 @@ export default function PostCard({ post }) {
               color: '#000',
               textDecoration: 'none',
               fontWeight: 700,
-              lineHeight: 1.4,
             }}
           >
             {post.title}

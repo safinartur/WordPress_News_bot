@@ -5,6 +5,16 @@ import PostCard from '../components/PostCard.jsx'
 
 const API = import.meta.env.VITE_API_BASE
 
+// 💬 Словарь slug → кириллическое имя
+const TAG_TRANSLATIONS = {
+  novosti: 'Новости',
+  obshchestvo: 'Общество',
+  politika: 'Политика',
+  ekonomika: 'Экономика',
+  transport: 'Транспорт',
+  ekologiia: 'Экология',
+}
+
 export default function Post() {
   const { slug } = useParams()
   const [post, setPost] = useState(null)
@@ -23,7 +33,6 @@ export default function Post() {
             typeof data.tags[0] === 'string' ? data.tags[0] : data.tags[0].slug
           const rel = await fetch(`${API}/posts/?tag=${firstTag}`)
           const relData = await rel.json()
-          // исключаем сам пост
           const filtered = relData.results.filter((p) => p.slug !== slug)
           setRelated(filtered.slice(0, 3))
         }
@@ -48,15 +57,22 @@ export default function Post() {
           marginInline: 'auto',
         }}
       >
-        {/* Теги */}
-        <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {/* 🏷 Теги */}
+        <div
+          style={{
+            marginBottom: 16,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 8,
+          }}
+        >
           {post.tags?.length > 0 ? (
             post.tags.map((t, i) => {
               const tagSlug = typeof t === 'string' ? t : t.slug
               const tagName =
                 typeof t === 'string'
-                  ? t.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-                  : t.name
+                  ? TAG_TRANSLATIONS[t] || t
+                  : TAG_TRANSLATIONS[t.slug] || t.name || t.slug
               return (
                 <Link
                   key={i}
@@ -64,13 +80,12 @@ export default function Post() {
                   style={{
                     border: '1px solid #000',
                     color: '#000',
-                    padding: '2px 10px',
-                    borderRadius: '14px',
+                    padding: '3px 10px',
+                    borderRadius: '16px',
                     fontSize: 12,
                     textDecoration: 'none',
                     background: '#fff',
                     fontWeight: 500,
-                    textTransform: 'capitalize',
                   }}
                 >
                   {tagName}
@@ -82,7 +97,7 @@ export default function Post() {
           )}
         </div>
 
-        {/* Заголовок */}
+        {/* 📰 Заголовок */}
         <h1
           style={{
             fontSize: '1.9rem',
@@ -95,12 +110,12 @@ export default function Post() {
           {post.title}
         </h1>
 
-        {/* Дата */}
+        {/* 📅 Дата */}
         <p style={{ color: '#777', fontSize: 13, marginTop: 0, marginBottom: 16 }}>
           {new Date(post.created_at).toLocaleString('ru-RU')}
         </p>
 
-        {/* Обложка */}
+        {/* 🖼 Обложка */}
         {post.cover && (
           <img
             src={post.cover}
@@ -116,7 +131,7 @@ export default function Post() {
           />
         )}
 
-        {/* Текст */}
+        {/* 📄 Основной текст */}
         <div
           style={{
             fontSize: 17,
@@ -130,7 +145,7 @@ export default function Post() {
         />
       </article>
 
-      {/* Похожие новости */}
+      {/* 🔗 Похожие новости */}
       {related.length > 0 && (
         <section
           style={{
