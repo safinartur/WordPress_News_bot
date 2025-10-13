@@ -73,13 +73,20 @@ class PostListCreateView(View):
         print(f"🏷 Полученные теги: {tag_slugs}")
 
         post = Post.objects.create(title=title, body=body, published=True)
-
         # добавляем теги
         if tag_slugs:
+            from unidecode import unidecode  # 👈 добавляем импорт для латинизации
             tags = []
             for raw in tag_slugs:
-                slug = slugify(raw)[:60]
-                tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"name": raw.title()})
+                raw_clean = raw.strip()
+                if not raw_clean:
+                    continue
+                # преобразуем кириллицу → латиницу
+                latin_slug = slugify(unidecode(raw_clean))[:60]
+                tag, _ = Tag.objects.get_or_create(
+                    slug=latin_slug,
+                    defaults={"name": raw_clean.title()}
+                )
                 tags.append(tag)
             post.tags.set(tags)
             print(f"✅ Установлены теги: {[t.slug for t in tags]}")
