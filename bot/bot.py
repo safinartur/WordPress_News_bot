@@ -263,13 +263,14 @@ def build_app():
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
-    per_message=True,     # ✅ теперь inline-кнопки отслеживаются всегда
+    per_chat=True,
+    per_message=True,
     )
-
+    app.add_handler(conv_new)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("delete", delete_post))
-    app.add_handler(conv_new)
+    
     return app
 
 
