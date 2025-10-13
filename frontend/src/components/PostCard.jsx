@@ -50,10 +50,11 @@ export default function PostCard({ post }) {
             style={{
               width: '150px',
               height: '100px',
-              objectFit: 'cover',
+              objectFit: 'contain',     // ✅ теперь показывается полностью
               borderRadius: 8,
               flexShrink: 0,
               marginRight: 16,
+              backgroundColor: '#f8f8f8', // аккуратный фон, если фото не заполняет всё
             }}
           />
         </Link>

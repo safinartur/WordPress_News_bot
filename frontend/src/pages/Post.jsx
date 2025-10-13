@@ -125,7 +125,8 @@ export default function Post() {
               borderRadius: 8,
               margin: '20px 0',
               maxHeight: 460,
-              objectFit: 'cover',
+              objectFit: 'contain',      // ✅ показывается полностью
+              backgroundColor: '#f8f8f8', // фон вокруг
               boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
             }}
           />
