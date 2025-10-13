@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Layout from './Layout.jsx'
 import PostCard from '../components/PostCard.jsx'
+import Sidebar from '../components/Sidebar.jsx'
 
 const API = import.meta.env.VITE_API_BASE
 
@@ -18,9 +19,7 @@ export default function App() {
       const r = await fetch(`${API}/posts/?page=${p}`)
       const data = await r.json()
 
-      // если меньше 10 результатов — это последняя страница
       if (data.results.length < 10) setHasMore(false)
-
       setPosts((prev) => (p === 1 ? data.results : [...prev, ...data.results]))
     } catch (err) {
       console.error('Ошибка загрузки новостей:', err)
@@ -33,7 +32,7 @@ export default function App() {
     load(1)
   }, [])
 
-  // Подключаем IntersectionObserver
+  // Подключаем IntersectionObserver для автоподгрузки
   useEffect(() => {
     if (!hasMore || loading) return
     const observer = new IntersectionObserver(
@@ -46,7 +45,6 @@ export default function App() {
       },
       { threshold: 1.0 }
     )
-
     if (loaderRef.current) observer.observe(loaderRef.current)
     return () => observer.disconnect()
   }, [page, hasMore, loading])
@@ -55,37 +53,59 @@ export default function App() {
     <Layout>
       <div
         style={{
-          background: '#f8fafc',
-          padding: '24px',
-          borderRadius: 8,
-          maxWidth: 900,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: '20px',
+          maxWidth: 1200,
           margin: '0 auto',
+          padding: '20px',
         }}
       >
-        {posts.map((p) => (
-          <PostCard key={p.slug} post={p} />
-        ))}
+        {/* Левая часть — основная лента */}
+        <div
+          style={{
+            flex: 1,
+            background: '#f8fafc',
+            padding: '24px',
+            borderRadius: 8,
+            minHeight: '100vh',
+          }}
+        >
+          {posts.map((p) => (
+            <PostCard key={p.slug} post={p} />
+          ))}
 
-        {/* Лоадер (невидимый, триггерит подгрузку) */}
-        {hasMore && (
-          <div
-            ref={loaderRef}
-            style={{
-              height: 50,
-              textAlign: 'center',
-              color: '#777',
-              fontSize: 14,
-            }}
-          >
-            {loading ? 'Загрузка...' : 'Прокрутите ниже, чтобы подгрузить ещё'}
-          </div>
-        )}
+          {/* Лоадер (невидимый триггер) */}
+          {hasMore && (
+            <div
+              ref={loaderRef}
+              style={{
+                height: 50,
+                textAlign: 'center',
+                color: '#777',
+                fontSize: 14,
+              }}
+            >
+              {loading ? 'Загрузка...' : 'Прокрутите ниже, чтобы подгрузить ещё'}
+            </div>
+          )}
 
-        {!hasMore && (
-          <div style={{ textAlign: 'center', color: '#aaa', marginTop: 20 }}>
-            Больше новостей нет.
-          </div>
-        )}
+          {!hasMore && (
+            <div
+              style={{
+                textAlign: 'center',
+                color: '#aaa',
+                marginTop: 20,
+              }}
+            >
+              Больше новостей нет.
+            </div>
+          )}
+        </div>
+
+        {/* Правая колонка — Sidebar */}
+        <Sidebar />
       </div>
     </Layout>
   )
