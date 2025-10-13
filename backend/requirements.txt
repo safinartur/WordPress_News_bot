@@ -8,3 +8,5 @@ gunicorn>=21.2
 # Cloudflare R2 (через boto3 + django-storages)
 boto3>=1.34
 django-storages>=1.14
+
+dj-database-url
