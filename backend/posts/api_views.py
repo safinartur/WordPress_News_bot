@@ -56,7 +56,15 @@ class PostListCreateView(View):
 
         # добавляем теги
         if tag_slugs:
-            tags = Tag.objects.filter(slug__in=tag_slugs)
+            from django.utils.text import slugify
+            tags = []
+            for raw in tag_slugs:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                slug = slugify(raw)[:60]
+                tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"name": raw})
+                tags.append(tag)
             post.tags.set(tags)
 
         # добавляем обложку

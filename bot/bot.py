@@ -1,16 +1,19 @@
 import os
 import time
 import requests
-from urllib.parse import urlparse
 from dotenv import load_dotenv
 from typing import Optional
-
-from telegram import Update
+from telegram import (
+    Update,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
     ConversationHandler,
+    CallbackQueryHandler,
     filters,
     ContextTypes,
 )
@@ -25,21 +28,31 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 MOD_IDS = set([int(x) for x in os.getenv("MODERATOR_IDS", "").split(",") if x.strip().isdigit()])
 DEFAULT_TAGS = [t.strip() for t in os.getenv("DEFAULT_TAGS", "").split(",") if t.strip()]
 
-TITLE, BODY, IMAGE = range(3)
+TITLE, BODY, TAGS, IMAGE = range(4)
+
+# --- Основные теги для выбора ---
+MAIN_TAGS = [
+    ("новости", "📰 Новости"),
+    ("общество", "🏙 Общество"),
+    ("политика", "🏛 Политика"),
+    ("экономика", "💰 Экономика"),
+    ("транспорт", "🚗 Транспорт"),
+    ("экология", "🌿 Экология"),
+]
+
 
 # === Проверка прав модератора ===
 def is_authorized(user_id: int) -> bool:
     return not MOD_IDS or user_id in MOD_IDS
 
 
-# === Вспомогательная функция: извлечь slug из ссылки ===
+# === Извлечение slug из ссылки ===
 def extract_slug(text: str) -> str:
     text = text.strip()
     if "#/post/" in text:
         return text.split("#/post/")[-1].split("?")[0].split("#")[0].strip("/")
     if "/post/" in text:
         return text.split("/post/")[-1].split("?")[0].split("#")[0].strip("/")
-    # Если просто slug
     return text
 
 
@@ -62,8 +75,48 @@ async def got_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === Получение текста ===
 async def got_body(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["body"] = update.message.text or update.message.caption or ""
-    await update.message.reply_text("📷 Пришлите изображение (как фото) или /skip чтобы пропустить.")
-    return IMAGE
+
+    # создаём inline-кнопки тегов
+    buttons = [[InlineKeyboardButton(label, callback_data=slug)] for slug, label in MAIN_TAGS]
+    buttons.append([InlineKeyboardButton("✅ Продолжить", callback_data="done")])
+
+    await update.message.reply_text(
+        "🏷 Выберите один или несколько тегов (нажимайте подряд):",
+        reply_markup=InlineKeyboardMarkup(buttons),
+    )
+    context.user_data["tag_slugs"] = []
+    return TAGS
+
+
+# === Обработка нажатий на кнопки тегов ===
+async def select_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    tag = query.data
+
+    if tag == "done":
+        if not context.user_data.get("tag_slugs"):
+            context.user_data["tag_slugs"] = DEFAULT_TAGS
+        await query.edit_message_text(
+            "📷 Пришлите изображение (как фото) или /skip чтобы пропустить."
+        )
+        return IMAGE
+
+    # добавляем тег, если его нет
+    tags = context.user_data.get("tag_slugs", [])
+    if tag not in tags:
+        tags.append(tag)
+    context.user_data["tag_slugs"] = tags
+
+    selected = ", ".join(tags)
+    await query.edit_message_text(
+        f"✅ Вы выбрали: {selected}\n\nМожно выбрать ещё или нажать ✅ Продолжить.",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(label, callback_data=slug)] for slug, label in MAIN_TAGS]
+            + [[InlineKeyboardButton("✅ Продолжить", callback_data="done")]]
+        ),
+    )
+    return TAGS
 
 
 # === Пропуск фото ===
@@ -90,7 +143,7 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
     print("📤 Публикация новости...")
 
     try:
-        # 1️⃣ Проверяем backend с несколькими попытками (для Render)
+        # проверяем backend
         ping_url = f"{API_BASE}/posts/?page=1"
         print(f"🌐 Проверяю backend: {ping_url}")
 
@@ -104,8 +157,6 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
                     print(f"✅ Backend отвечает за {ping_time}s (попытка {attempt+1})")
                     backend_ready = True
                     break
-                else:
-                    print(f"⚠️ Backend вернул {resp.status_code}, попытка {attempt+1}")
             except requests.exceptions.RequestException as e:
                 print(f"🟥 Попытка {attempt+1}: {e}")
             if attempt < 2:
@@ -116,18 +167,17 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
             await update.message.reply_text("🟥 Backend не ответил после 3 попыток. Попробуй чуть позже.")
             return
 
-        # 2️⃣ Отправляем POST
+        # формируем данные
         data = {
             "title": context.user_data.get("title", "(без названия)"),
             "body": context.user_data.get("body", "(без текста)"),
-            "tag_slugs": DEFAULT_TAGS,
+            "tag_slugs": context.user_data.get("tag_slugs", DEFAULT_TAGS),
         }
         files = {"cover": open(photo_file, "rb")} if photo_file else None
         headers = {"X-API-KEY": API_KEY}
 
-        print(f"➡️ POST {API_BASE}/posts/")
+        print(f"➡️ POST {API_BASE}/posts/ | Теги: {data['tag_slugs']}")
         r = requests.post(f"{API_BASE}/posts/", data=data, files=files, headers=headers, timeout=(10, 30))
-
         if files:
             files["cover"].close()
 
@@ -139,14 +189,10 @@ async def publish(update: Update, context: ContextTypes.DEFAULT_TYPE, photo_file
             url = f"{FRONTEND_BASE}/#/post/{post['slug']}"
             await update.message.reply_text(f"✅ Опубликовано успешно:\n{url}")
         else:
-            err = r.text[:500] + "...[обрезано]" if len(r.text) > 500 else r.text
-            await update.message.reply_text(f"❌ Ошибка публикации ({r.status_code}): {err}")
+            await update.message.reply_text(f"❌ Ошибка публикации ({r.status_code}): {r.text[:300]}")
 
-    except requests.exceptions.Timeout:
-        print("⏱️ Таймаут запроса к backend")
-        await update.message.reply_text("⚠️ Сервер не ответил вовремя (таймаут).")
     except Exception as e:
-        print(f"💥 Ошибка в publish(): {e}")
+        print(f"💥 Ошибка publish(): {e}")
         await update.message.reply_text(f"💥 Ошибка публикации: {e}")
     finally:
         print("✅ publish() завершена.")
@@ -210,6 +256,7 @@ def build_app():
         states={
             TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_title)],
             BODY: [MessageHandler(filters.TEXT & ~filters.COMMAND, got_body)],
+            TAGS: [CallbackQueryHandler(select_tag)],
             IMAGE: [
                 CommandHandler("skip", skip_image),
                 MessageHandler(filters.PHOTO, got_image),
