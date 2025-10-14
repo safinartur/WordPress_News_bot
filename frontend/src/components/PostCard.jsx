@@ -1,160 +1,125 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-const MONTHS = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-]
-
-const TAG_TRANSLATIONS = {
-  novosti: 'Новости',
-  obshchestvo: 'Общество',
-  politika: 'Политика',
-  ekonomika: 'Экономика',
-  transport: 'Транспорт',
-  ekologiia: 'Экология',
-}
-
 export default function PostCard({ post }) {
-  const date = new Date(post.created_at)
-  const formatted = `${date.getDate()} ${MONTHS[date.getMonth()]}, ${date
-    .getHours()
-    .toString()
-    .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
-
-  // 🧩 Логика превью: если короткий текст, показываем полностью
-  const cleanBody = (post.body || '').replace(/\n/g, ' ').trim()
-  const preview =
-    cleanBody.length > 180 ? cleanBody.slice(0, 180) + '…' : cleanBody || 'Без описания'
-
   return (
     <article
       style={{
         display: 'flex',
-        alignItems: 'stretch',
+        alignItems: 'flex-start',
+        gap: '16px',
         background: '#fff',
         borderRadius: '10px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        padding: '16px',
         marginBottom: '20px',
         transition: 'transform 0.2s ease',
+        maxWidth: '100%',
+        overflow: 'hidden',
       }}
       className="post-card"
     >
-      {/* 🖼 Фото слева, крупное */}
-      {post.cover ? (
-        <Link
-          to={`/post/${post.slug}`}
-          style={{
-            display: 'block',
-            width: '40%', // фото занимает почти половину карточки
-            maxWidth: '320px',
-            background: '#f8f8f8',
-            flexShrink: 0,
-          }}
-        >
+      {/* Картинка слева */}
+      {post.cover && (
+        <Link to={`/post/${post.slug}`} style={{ flexShrink: 0 }}>
           <img
             src={post.cover}
             alt={post.title}
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover', // ✅ как на kalina39 — фото крупное
+              width: '230px',
+              height: 'auto',
+              maxHeight: '180px',
+              objectFit: 'contain',
+              borderRadius: '8px',
               display: 'block',
             }}
           />
         </Link>
-      ) : (
-        <div
-          style={{
-            width: '40%',
-            maxWidth: '320px',
-            background: '#f2f2f2',
-            flexShrink: 0,
-          }}
-        />
       )}
 
-      {/* 📄 Текст справа */}
+      {/* Контент справа */}
       <div
         style={{
           flex: 1,
-          padding: '18px 22px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
+          minWidth: 0, // 👈 позволяет тексту переноситься, не растягивая родителя
+          wordWrap: 'break-word',
+          overflowWrap: 'anywhere', // 👈 предотвращает "уход" длинных ссылок
         }}
       >
-        <div>
-          {/* 🏷 Теги */}
-          <div style={{ marginBottom: 6 }}>
-            {post.tags?.map((t, i) => {
-              const slug = typeof t === 'string' ? t : t.slug
-              const name =
-                typeof t === 'string'
-                  ? TAG_TRANSLATIONS[t] || t
-                  : TAG_TRANSLATIONS[t.slug] || t.name || t.slug
-              return (
-                <Link
-                  key={i}
-                  to={`/tag/${slug}`}
-                  style={{
-                    display: 'inline-block',
-                    border: '1px solid #000',
-                    borderRadius: '16px',
-                    padding: '2px 10px',
-                    fontSize: 12,
-                    marginRight: 6,
-                    color: '#000',
-                    textDecoration: 'none',
-                  }}
-                >
-                  {name}
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* 📰 Заголовок */}
-          <h3 style={{ margin: '4px 0 6px' }}>
-            <Link
-              to={`/post/${post.slug}`}
-              style={{
-                color: '#000',
-                textDecoration: 'none',
-                fontWeight: 700,
-                fontSize: '1.2rem',
-                lineHeight: 1.3,
-              }}
-            >
-              {post.title}
-            </Link>
-          </h3>
-
-          {/* 📖 Текст новости */}
-          <p
-            style={{
-              color: '#444',
-              fontSize: 15,
-              lineHeight: 1.55,
-              marginTop: 4,
-              marginBottom: 8,
-            }}
-          >
-            {preview}
-          </p>
+        {/* Теги */}
+        <div style={{ marginBottom: 8, flexWrap: 'wrap', display: 'flex', gap: '6px' }}>
+          {post.tags?.length > 0 &&
+            post.tags.map((t) => (
+              <Link
+                key={t.slug || t}
+                to={`/tag/${t.slug || t}`}
+                style={{
+                  display: 'inline-block',
+                  background: '#f4f6f8',
+                  color: '#333',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  border: '1px solid #000',
+                }}
+              >
+                {t.name || t}
+              </Link>
+            ))}
         </div>
 
-        {/* 📅 Дата */}
+        {/* Заголовок */}
+        <h3
+          style={{
+            margin: '0 0 6px',
+            fontSize: '1.2rem',
+            lineHeight: 1.3,
+          }}
+        >
+          <Link
+            to={`/post/${post.slug}`}
+            style={{
+              color: '#000',
+              textDecoration: 'none',
+              fontWeight: 700,
+            }}
+          >
+            {post.title}
+          </Link>
+        </h3>
+
+        {/* Текст */}
+        <p
+          style={{
+            color: '#555',
+            fontSize: 15,
+            marginTop: 0,
+            lineHeight: 1.5,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 4, // 👈 ограничим 4 строки, остальное скрывается
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {post.body?.trim() || 'Без описания'}
+        </p>
+
+        {/* Дата */}
         <p
           style={{
             color: '#999',
             fontSize: 13,
-            marginTop: 0,
-            alignSelf: 'flex-end',
+            marginTop: 6,
           }}
         >
-          {formatted}
+          {new Date(post.created_at).toLocaleString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </p>
       </div>
     </article>
