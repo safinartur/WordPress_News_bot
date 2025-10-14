@@ -51,77 +51,83 @@ export default function App() {
 
   return (
     <Layout>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          gap: '24px',
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '16px',
-          flexWrap: 'wrap', // ✅ делает адаптив на телефонах
-        }}
-      >
+      <div className="main-container">
         {/* Основная лента */}
-        <div
-          style={{
-            flex: 1,
-            background: '#f8fafc',
-            padding: '20px',
-            borderRadius: 8,
-            minHeight: '100vh',
-            maxWidth: '860px',
-          }}
-        >
+        <div className="news-feed">
           {posts.map((p) => (
             <PostCard key={p.slug} post={p} />
           ))}
 
           {/* Лоадер (триггер подгрузки) */}
           {hasMore && (
-            <div
-              ref={loaderRef}
-              style={{
-                height: 50,
-                textAlign: 'center',
-                color: '#777',
-                fontSize: 14,
-              }}
-            >
+            <div ref={loaderRef} className="load-more">
               {loading ? 'Загрузка...' : 'Прокрутите ниже, чтобы подгрузить ещё'}
             </div>
           )}
 
           {!hasMore && (
-            <div
-              style={{
-                textAlign: 'center',
-                color: '#aaa',
-                marginTop: 20,
-              }}
-            >
-              Больше новостей нет.
-            </div>
+            <div className="no-more">Больше новостей нет.</div>
           )}
         </div>
 
-        {/* Sidebar исчезает на телефонах */}
-        <div className="sidebar-wrapper" style={{ display: 'none' }}>
-          <Sidebar />
-        </div>
+        {/* Sidebar */}
+        <Sidebar />
       </div>
 
-      {/* 🧩 CSS адаптив */}
-      <style>
-        {`
-          @media (min-width: 1000px) {
-            .sidebar-wrapper {
-              display: block;
-            }
+      {/* Адаптив CSS */}
+      <style>{`
+        .main-container {
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 24px;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 16px;
+          flex-wrap: wrap;
+        }
+
+        .news-feed {
+          flex: 1;
+          background: #f8fafc;
+          padding: 20px;
+          border-radius: 8px;
+          min-height: 100vh;
+          max-width: 860px;
+        }
+
+        .load-more {
+          height: 50px;
+          text-align: center;
+          color: #777;
+          font-size: 14px;
+          margin-top: 10px;
+        }
+
+        .no-more {
+          text-align: center;
+          color: #aaa;
+          margin-top: 20px;
+        }
+
+        /* === 📱 Мобильная версия === */
+        @media (max-width: 999px) {
+          .main-container {
+            flex-direction: column;
+            padding: 10px;
           }
-        `}
-      </style>
+
+          .news-feed {
+            max-width: 100%;
+            padding: 14px;
+            background: transparent;
+          }
+
+          aside {
+            display: none !important;
+          }
+        }
+      `}</style>
     </Layout>
   )
 }
