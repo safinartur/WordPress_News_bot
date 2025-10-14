@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 
 const API = import.meta.env.VITE_API_BASE
 const MONTHS = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  'января','февраля','марта','апреля','мая','июня',
+  'июля','августа','сентября','октября','ноября','декабря'
 ]
 
 export default function Sidebar() {
@@ -15,7 +15,7 @@ export default function Sidebar() {
       try {
         const r = await fetch(`${API}/posts/?page=1`)
         const data = await r.json()
-        setPosts(data.results.slice(0, 6)) // только 6 последних
+        setPosts(data.results.slice(0, 6))
       } catch (err) {
         console.error('Ошибка загрузки коротких новостей:', err)
       }
@@ -25,29 +25,34 @@ export default function Sidebar() {
   return (
     <aside
       style={{
-        width: '280px',
+        width: '250px',
         flexShrink: 0,
-        marginLeft: '24px',
+        marginLeft: '20px',
         position: 'sticky',
         top: '20px',
         alignSelf: 'flex-start',
         background: '#f9fafb',
         borderRadius: '10px',
-        padding: '16px 18px',
+        padding: '14px 16px',
         boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+        maxHeight: '75vh', // ограничиваем высоту окна
+        overflowY: 'auto', // добавляем прокрутку внутри, если не влезает
       }}
     >
       <h3
         style={{
-          fontSize: '1.05rem',
+          fontSize: '1rem',
           fontWeight: 700,
           color: '#111',
-          marginBottom: '12px',
+          marginBottom: '10px',
           borderBottom: '2px solid #e5e7eb',
           paddingBottom: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}
       >
-        🗞 Новости одной строкой
+        <span style={{ fontSize: '1.1rem' }}>📰</span> Новости одной строкой
       </h3>
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -62,8 +67,8 @@ export default function Sidebar() {
             <li
               key={p.slug}
               style={{
-                marginBottom: i === posts.length - 1 ? 0 : 12,
-                paddingBottom: 12,
+                marginBottom: i === posts.length - 1 ? 0 : 10,
+                paddingBottom: 10,
                 borderBottom: i === posts.length - 1 ? 'none' : '1px solid #e2e8f0',
               }}
             >
@@ -72,19 +77,14 @@ export default function Sidebar() {
                 style={{
                   color: '#000',
                   fontWeight: 500,
+                  fontSize: 14,
                   lineHeight: 1.4,
                   textDecoration: 'none',
                 }}
               >
                 {p.title.length > 60 ? p.title.slice(0, 60) + '…' : p.title}
               </Link>
-              <div
-                style={{
-                  color: '#6b7280',
-                  fontSize: 12,
-                  marginTop: 3,
-                }}
-              >
+              <div style={{ color: '#6b7280', fontSize: 12, marginTop: 3 }}>
                 {formatted}
               </div>
             </li>
@@ -92,18 +92,18 @@ export default function Sidebar() {
         })}
       </ul>
 
-      <div style={{ textAlign: 'center', marginTop: 14 }}>
+      <div style={{ textAlign: 'center', marginTop: 10 }}>
         <Link
           to="/"
           style={{
             display: 'inline-block',
-            fontSize: 13,
+            fontSize: 12,
             color: '#ed7070',
             textDecoration: 'none',
             fontWeight: 600,
             border: '1px solid #ed7070',
             borderRadius: 20,
-            padding: '5px 14px',
+            padding: '4px 12px',
             transition: 'all 0.2s ease',
           }}
         >
