@@ -19,6 +19,7 @@ const MONTHS = [
 
 function Sidebar() {
   const [posts, setPosts] = useState([])
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     ;(async () => {
@@ -31,6 +32,17 @@ function Sidebar() {
       }
     })()
   }, [])
+
+  // Адаптив: проверка ширины экрана
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1000)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // На мобильных Sidebar не отображаем вовсе
+  if (isMobile) return null
 
   return (
     <aside
@@ -120,8 +132,6 @@ function Sidebar() {
             textDecoration: 'none',
             transition: 'all 0.2s ease',
           }}
-          onMouseOver={(e) => (e.target.style.background = '#e05a5a')}
-          onMouseOut={(e) => (e.target.style.background = 'transparent')}
         >
           Все новости →
         </Link>

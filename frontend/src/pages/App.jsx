@@ -5,14 +5,13 @@ import Sidebar from '../components/Sidebar.jsx'
 
 const API = import.meta.env.VITE_API_BASE
 
-function App() {
+export default function App() {
   const [posts, setPosts] = useState([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
   const loaderRef = useRef(null)
 
-  // 📦 Загрузка постов с пагинацией
   async function load(p = 1) {
     if (loading) return
     setLoading(true)
@@ -20,7 +19,6 @@ function App() {
       const r = await fetch(`${API}/posts/?page=${p}`)
       const data = await r.json()
 
-      // если вернулось меньше 10 — это последняя страница
       if (data.results.length < 10) setHasMore(false)
       setPosts((prev) => (p === 1 ? data.results : [...prev, ...data.results]))
     } catch (err) {
@@ -34,7 +32,7 @@ function App() {
     load(1)
   }, [])
 
-  // 👀 Автоподгрузка при прокрутке
+  // Подключаем IntersectionObserver для автоподгрузки
   useEffect(() => {
     if (!hasMore || loading) return
     const observer = new IntersectionObserver(
@@ -58,29 +56,29 @@ function App() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'flex-start',
-          gap: '40px',
-          maxWidth: 1300,
+          gap: '24px',
+          maxWidth: 1200,
           margin: '0 auto',
-          padding: '20px 30px',
-          flexWrap: 'nowrap',
+          padding: '16px',
+          flexWrap: 'wrap', // ✅ делает адаптив на телефонах
         }}
       >
-        {/* 📰 Основная лента новостей */}
+        {/* Основная лента */}
         <div
           style={{
-            flex: '1 1 0%',
+            flex: 1,
             background: '#f8fafc',
-            padding: '24px',
+            padding: '20px',
             borderRadius: 8,
-            minWidth: 0,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+            minHeight: '100vh',
+            maxWidth: '860px',
           }}
         >
           {posts.map((p) => (
             <PostCard key={p.slug} post={p} />
           ))}
 
-          {/* 🔁 Автоподгрузка */}
+          {/* Лоадер (триггер подгрузки) */}
           {hasMore && (
             <div
               ref={loaderRef}
@@ -108,11 +106,22 @@ function App() {
           )}
         </div>
 
-        {/* 📋 Правая колонка — Sidebar */}
-        <Sidebar />
+        {/* Sidebar исчезает на телефонах */}
+        <div className="sidebar-wrapper" style={{ display: 'none' }}>
+          <Sidebar />
+        </div>
       </div>
+
+      {/* 🧩 CSS адаптив */}
+      <style>
+        {`
+          @media (min-width: 1000px) {
+            .sidebar-wrapper {
+              display: block;
+            }
+          }
+        `}
+      </style>
     </Layout>
   )
 }
-
-export default App

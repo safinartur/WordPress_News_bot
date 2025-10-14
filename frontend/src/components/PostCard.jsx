@@ -6,63 +6,61 @@ export default function PostCard({ post }) {
     <article
       style={{
         display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap', // ✅ предотвращает вылет текста
         alignItems: 'flex-start',
-        gap: '16px',
+        gap: '14px',
         background: '#fff',
         borderRadius: '10px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
         padding: '16px',
-        marginBottom: '20px',
+        marginBottom: '18px',
         transition: 'transform 0.2s ease',
-        maxWidth: '100%',
-        overflow: 'hidden',
       }}
       className="post-card"
     >
       {/* Картинка слева */}
       {post.cover && (
-        <Link to={`/post/${post.slug}`} style={{ flexShrink: 0 }}>
+        <Link to={`/post/${post.slug}`}>
           <img
             src={post.cover}
             alt={post.title}
             style={{
-              width: '230px',
+              width: '180px',
+              maxWidth: '100%',
               height: 'auto',
-              maxHeight: '180px',
-              objectFit: 'contain',
               borderRadius: '8px',
-              objectFit: 'cover', 
-              display: 'block',
+              flexShrink: 0,
             }}
           />
         </Link>
       )}
 
-      {/* Контент справа */}
-      <div
-        style={{
-          flex: 1,
-          minWidth: 0, // 👈 позволяет тексту переноситься, не растягивая родителя
-          wordWrap: 'break-word',
-          overflowWrap: 'anywhere', // 👈 предотвращает "уход" длинных ссылок
-        }}
-      >
+      {/* Текст справа */}
+      <div style={{ flex: 1, minWidth: '260px' }}>
         {/* Теги */}
-        <div style={{ marginBottom: 8, flexWrap: 'wrap', display: 'flex', gap: '6px' }}>
+        <div
+          style={{
+            marginBottom: 6,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+          }}
+        >
           {post.tags?.length > 0 &&
-            post.tags.map((t) => (
+            post.tags.map((t, i) => (
               <Link
-                key={t.slug || t}
+                key={i}
                 to={`/tag/${t.slug || t}`}
                 style={{
                   display: 'inline-block',
-                  background: '#f4f6f8',
+                  border: '1px solid #ccc',
                   color: '#333',
-                  padding: '2px 7px',
-                  borderRadius: '20px',
+                  padding: '1px 8px',
+                  borderRadius: '12px',
                   fontSize: 11,
                   textDecoration: 'none',
-                  border: '1px solid #000',
+                  background: '#fafafa',
                 }}
               >
                 {t.name || t}
@@ -74,7 +72,8 @@ export default function PostCard({ post }) {
         <h3
           style={{
             margin: '0 0 6px',
-            fontSize: '1.2rem',
+            fontSize: '1.15rem',
+            fontWeight: 700,
             lineHeight: 1.3,
           }}
         >
@@ -83,7 +82,6 @@ export default function PostCard({ post }) {
             style={{
               color: '#000',
               textDecoration: 'none',
-              fontWeight: 700,
             }}
           >
             {post.title}
@@ -94,25 +92,21 @@ export default function PostCard({ post }) {
         <p
           style={{
             color: '#555',
-            fontSize: 15,
+            fontSize: 14,
             marginTop: 0,
             lineHeight: 1.5,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 4, // 👈 ограничим 4 строки, остальное скрывается
-            WebkitBoxOrient: 'vertical',
           }}
         >
-          {post.body?.trim() || 'Без описания'}
+          {(post.body ?? '').slice(0, 200).replace(/\n/g, ' ') ||
+            'Читать далее…'}
         </p>
 
         {/* Дата */}
         <p
           style={{
             color: '#999',
-            fontSize: 13,
-            marginTop: 6,
+            fontSize: 12,
+            marginTop: 4,
           }}
         >
           {new Date(post.created_at).toLocaleString('ru-RU', {
