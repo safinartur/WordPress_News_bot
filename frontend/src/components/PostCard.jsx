@@ -31,6 +31,7 @@ export default function PostCard({ post }) {
               maxHeight: '180px',
               objectFit: 'contain',
               borderRadius: '8px',
+              objectFit: 'cover', 
               display: 'block',
             }}
           />
@@ -57,9 +58,9 @@ export default function PostCard({ post }) {
                   display: 'inline-block',
                   background: '#f4f6f8',
                   color: '#333',
-                  padding: '3px 10px',
+                  padding: '2px 7px',
                   borderRadius: '20px',
-                  fontSize: 12,
+                  fontSize: 11,
                   textDecoration: 'none',
                   border: '1px solid #000',
                 }}
