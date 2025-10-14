@@ -25,7 +25,7 @@ function Sidebar() {
       try {
         const r = await fetch(`${API}/posts/?page=1`)
         const data = await r.json()
-        setPosts(data.results.slice(0, 5)) // последние 5 новостей
+        setPosts(data.results.slice(0, 5))
       } catch (err) {
         console.error('Ошибка загрузки Sidebar:', err)
       }
@@ -37,31 +37,32 @@ function Sidebar() {
       style={{
         position: 'sticky',
         top: '90px',
-        width: '260px',
-        flexShrink: 0,
+        width: '220px',
+        flex: '0 0 220px',
         background: '#fff',
-        padding: '18px 16px 20px',
+        padding: '16px 14px',
         borderRadius: '10px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         height: 'fit-content',
         alignSelf: 'flex-start',
+        overflow: 'hidden',
       }}
     >
       <h3
         style={{
-          fontSize: '1.05rem',
+          fontSize: '1rem',
           fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          borderBottom: '1px solid #eaeaea',
+          borderBottom: '1px solid #eee',
           paddingBottom: 6,
-          marginBottom: 12,
+          marginBottom: 10,
           color: '#111',
+          whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ fontSize: '1.2rem' }}>📰</span>
-        Новости одной строкой
+        🗞 Новости одной строкой
       </h3>
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -78,43 +79,43 @@ function Sidebar() {
             <li
               key={p.slug || i}
               style={{
-                marginBottom: 14,
+                marginBottom: 12,
                 borderBottom:
-                  i < posts.length - 1 ? '1px solid #f0f0f0' : 'none',
+                  i < posts.length - 1 ? '1px solid #f1f1f1' : 'none',
                 paddingBottom: 8,
               }}
             >
               <Link
                 to={`/post/${p.slug}`}
                 style={{
-                  color: '#111',
-                  fontWeight: 600,
-                  fontSize: '0.92rem',
+                  color: '#000',
+                  fontWeight: 500,
+                  fontSize: '0.85rem',
                   textDecoration: 'none',
-                  lineHeight: 1.3,
+                  lineHeight: 1.25,
                 }}
               >
-                {p.title.length > 80
-                  ? p.title.slice(0, 80) + '...'
+                {p.title.length > 60
+                  ? p.title.slice(0, 60) + '...'
                   : p.title}
               </Link>
               <br />
-              <span style={{ color: '#888', fontSize: 12 }}>{formatted}</span>
+              <span style={{ color: '#888', fontSize: 11 }}>{formatted}</span>
             </li>
           )
         })}
       </ul>
 
-      <div style={{ textAlign: 'center', marginTop: 8 }}>
+      <div style={{ textAlign: 'center', marginTop: 6 }}>
         <Link
           to="/"
           style={{
             display: 'inline-block',
             color: '#e05a5a',
             border: '1px solid #e05a5a',
-            borderRadius: '20px',
-            padding: '4px 12px',
-            fontSize: 13,
+            borderRadius: '18px',
+            padding: '3px 10px',
+            fontSize: 12,
             fontWeight: 500,
             textDecoration: 'none',
             transition: 'all 0.2s ease',
